@@ -1,0 +1,117 @@
+# Enhanced Application Configuration for Form Service
+loan:
+  form:
+    validation:
+      # Income validation settings
+      min-income: 20000
+      max-income: 10000000
+      
+      # Name validation settings
+      min-name-length: 2
+      max-name-length: 50
+      max-company-name-length: 100
+      
+      # Allowed occupations
+      allowed-occupations:
+        - SALARIED
+        - SELF_EMPLOYED
+      
+      # Custom validation rules
+      custom-rules:
+        email:
+          pattern: "^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$"
+          error-code: "INVALID_EMAIL_FORMAT"
+          error-message: "Please enter a valid email address"
+          required: true
+        
+        pan:
+          pattern: "^[A-Z]{5}[0-9]{4}[A-Z]{1}$"
+          error-code: "INVALID_PAN_FORMAT"
+          error-message: "PAN should be in format: ABCDE1234F"
+          required: true
+        
+        pincode:
+          pattern: "^[1-9][0-9]{5}$"
+          error-code: "INVALID_PINCODE_FORMAT"
+          error-message: "Please enter a valid 6-digit pincode"
+          required: true
+
+  cache:
+    # Cache duration settings
+    score-duration: PT1H    # 1 hour
+    form-duration: PT2H     # 2 hours
+    user-duration: PT30M    # 30 minutes
+    
+    # Cache prefixes
+    prefixes:
+      score: "pg_pl_score_"
+      affluence: "pg_pl_affluence_score_"
+      form: "form_data_"
+      dedupe: "dedupe_cache_key_"
+
+  async:
+    # Async processing settings
+    enabled: true
+    form-processing:
+      core-pool-size: 5
+      max-pool-size: 10
+      queue-capacity: 25
+      keep-alive-seconds: 300
+    
+    loan-processing:
+      core-pool-size: 3
+      max-pool-size: 8
+      queue-capacity: 50
+      keep-alive-seconds: 300
+
+  monitoring:
+    # Health check settings
+    enabled: true
+    cache-timeout: 5000
+    database-timeout: 3000
+    
+    # Metrics settings
+    metrics:
+      enabled: true
+      form-submission-timer: true
+      validation-counters: true
+
+# Spring Boot Configuration
+spring:
+  # Enable async processing
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 16
+        keep-alive: 60s
+        queue-capacity: 100
+        allow-core-thread-timeout: true
+
+# Actuator endpoints for health monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+  health:
+    defaults:
+      enabled: true
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+# Logging configuration
+logging:
+  level:
+    com.gokiwi.loan_origination_system.onboarding.service.form: DEBUG
+    com.gokiwi.loan_origination_system.service.cache: DEBUG
+    com.gokiwi.loan_origination_system.config: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
